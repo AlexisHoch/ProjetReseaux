@@ -32,7 +32,7 @@ public class ClienTCP {
              out = new PrintWriter(echo.getOutputStream(),true);
              in = new BufferedReader(new InputStreamReader(echo.getInputStream()));
             
-            
+           
         }
         catch (UnknownHostException e){
             System.out.println("Destination inconnue");
