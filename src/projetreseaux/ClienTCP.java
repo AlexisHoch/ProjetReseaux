@@ -49,6 +49,14 @@ public class ClienTCP {
         while((userInput=stdIn.readLine())!=null){
             out.println(userInput);
             System.err.println("echo :" + in.readLine());
+            if(in.equals("FIN")){
+                out.close();
+                in.close();
+                stdIn.close();
+                echo.close();
+                System.exit(-1);
+                break;
+            }
         }
         out.close();
         in.close();
