@@ -6,9 +6,12 @@
 package projetreseaux;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -26,24 +29,46 @@ public class ServeurTCP {
             
             ServerSocket socketserveur = new ServerSocket(port);
             System.out.println("lancement du serveur");
-            /*System.out.println("Nom du serveur : "+rn.getName());
-            System.out.println("Adresse du serveur : "+rn.getAddress());*/
+            System.out.println("Nom du serveur : "+rn.getName());
+            System.out.println("Adresse du serveur : "+rn.getAddress());
+            
+            
+            
+            
+            Socket socketClient = socketserveur.accept();
+            BufferedReader in = new BufferedReader(
+                new InputStreamReader(socketClient.getInputStream()));
+            
+            PrintWriter pw = new PrintWriter(
+                    new BufferedWriter(
+                            new OutputStreamWriter(socketClient.getOutputStream())), true);
+            
+            System.out.println("Commexion avec : "+socketClient.getInetAddress());
+            
             while(true){
-                Socket socketClient = socketserveur.accept();
-                String message = "";
                 
-                System.out.println("Commexion avec : "+socketClient.getInetAddress());
                 
-                BufferedReader in = new BufferedReader(
-                        new InputStreamReader(socketClient.getInputStream()));
                 
-                PrintStream out = new PrintStream(socketClient.getOutputStream());
                 
-                message=in.readLine();
-                out.println(message);
                 
-                socketClient.close();
-         
+                
+                //PrintStream out = new PrintStream(socketClient.getOutputStream());
+                
+                String message=in.readLine();
+                
+                if (message.equals("FIN")){
+                    System.out.println(socketClient.getInetAddress()+" a fermé la conversation");
+                    in.close();
+                    pw.close();
+                    socketClient.close();
+                    socketserveur.close();
+                    break;
+                }
+                
+                System.out.println("message recu : "+message);
+                pw.println(message);
+                
+
             }
         }
         catch(Exception e){
