@@ -18,13 +18,16 @@ import java.net.Socket;
  */
 public class ServeurTCP {
     final static int port = 4444;
-    
+    final static ResoNom rn = new ResoNom();
     
     public static void main(String[] args) throws IOException{
         try {
+
+            
             ServerSocket socketserveur = new ServerSocket(port);
             System.out.println("lancement du serveur");
-            
+            /*System.out.println("Nom du serveur : "+rn.getName());
+            System.out.println("Adresse du serveur : "+rn.getAddress());*/
             while(true){
                 Socket socketClient = socketserveur.accept();
                 String message = "";
@@ -49,4 +52,5 @@ public class ServeurTCP {
         
         
     }
+
 }

@@ -17,18 +17,18 @@ public class ResoNom {
     private String adresse;
     private String nom;
     
-    public ResoNom() throws UnknownHostException{
+    public void ResoNom() throws UnknownHostException{
         InetAddress address = InetAddress.getLocalHost();
         String[] infos = address.toString().split("/");
         this.nom=infos[0];
         this.adresse=infos[1];
     }
     
-    public String getName(){
+    public String getAddress(){
         return this.adresse;
     }
     
-    public String nom(){
+    public String getName(){
         return this.nom;
     }
 }
