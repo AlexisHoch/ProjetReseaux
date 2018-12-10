@@ -16,9 +16,9 @@ public class ResoNom {
     
     private String adresse;
     private String nom;
-    
+    private InetAddress address;
     public void ResoNom() throws UnknownHostException{
-        InetAddress address = InetAddress.getLocalHost();
+        this.address = InetAddress.getLocalHost();
         String[] infos = address.toString().split("/");
         this.nom=infos[0];
         this.adresse=infos[1];
