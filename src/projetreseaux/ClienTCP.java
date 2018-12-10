@@ -13,6 +13,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Scanner;
 
 /**
  *
@@ -22,20 +23,54 @@ public class ClienTCP {
 
     
     public static void main(String[] arg) throws IOException{ 
-        Socket echo = null; 
-        PrintWriter out = null ; 
-        BufferedReader in = null; 
+        final Socket echo ; 
+        final PrintWriter out  ; 
+        final BufferedReader in ;
+        final Scanner sc = new Scanner(System.in);
         
 
         try {
-             echo = new Socket("pcalb-mm0607",4444);
-             out = new PrintWriter(echo.getOutputStream(),true);
+             //echo = new Socket("localhost",4444);
+             echo = new Socket("pcalb-mm0603",4444);
+             out = new PrintWriter(echo.getOutputStream());
              in = new BufferedReader(new InputStreamReader(echo.getInputStream()));
-            
+             Thread envoyer = new Thread(new Runnable() {
+             String msg;
+              @Override
+              public void run() {
+                while(true){
+                  msg = sc.nextLine();
+                  out.println(msg);
+                  out.flush();
+                }
+             }
+         });
+             envoyer.start();
+             
+             Thread recevoir = new Thread(new Runnable() {
+            String msg;
+            @Override
+            public void run() {
+               try {
+                 msg = in.readLine();
+                 while(!msg.equals("bye")){
+                    System.out.println(msg);
+                    msg = in.readLine();
+                 }
+                 System.out.println("Connexion perdue");
+                 out.close();
+                 echo.close();
+
+               } catch (IOException e) {
+                   e.printStackTrace();
+               }
+            }
+        });
+             recevoir.start();
            
         }
         catch (UnknownHostException e){
-            System.out.println("Destination inconnue");
+            System.out.println("Pas de Destinataire");
             System.exit(-1);
             
         }
@@ -43,25 +78,7 @@ public class ClienTCP {
             System.out.println("now to investigate this IO issue");
             System.exit(-1);
         }
-        
-        BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-        String userInput; 
-        while((userInput=stdIn.readLine())!=null){
-            out.println(userInput);
-            System.err.println("echo :" + in.readLine());
-            if(in.equals("FIN")){
-                out.close();
-                in.close();
-                stdIn.close();
-                echo.close();
-                System.exit(-1);
-                break;
-            }
-        }
-        out.close();
-        in.close();
-        stdIn.close();
-        echo.close();
+
         
 
         
