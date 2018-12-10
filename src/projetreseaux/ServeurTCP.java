@@ -12,8 +12,19 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import static java.lang.System.out;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 /**
  *
@@ -22,15 +33,20 @@ import java.net.Socket;
 public class ServeurTCP {
     final static int port = 4444;
     final static ResoNom rn = new ResoNom();
+    final static ChiffrementAES chif = new ChiffrementAES();
     
     public static void main(String[] args) throws IOException{
+     InetAddress address;
+     address = InetAddress.getLocalHost();
+     String[] infos = address.toString().split("/");
+     Scanner sc = new Scanner(System.in);
         try {
 
             
             ServerSocket socketserveur = new ServerSocket(port);
             System.out.println("lancement du serveur");
-            System.out.println("Nom du serveur : "+rn.getName());
-            System.out.println("Adresse du serveur : "+rn.getAddress());
+            System.out.println("Nom du serveur : "+infos[0]);
+            System.out.println("Adresse du serveur : "+infos[1]);
             
             
             
@@ -45,37 +61,58 @@ public class ServeurTCP {
             
             System.out.println("Commexion avec : "+socketClient.getInetAddress());
             
-            while(true){
-                
-                
-                
-                
-                
-                
-                //PrintStream out = new PrintStream(socketClient.getOutputStream());
-                
-                String message=in.readLine();
-                
-                if (message.equals("FIN")){
-                    System.out.println(socketClient.getInetAddress()+" a fermé la conversation");
-                    in.close();
-                    pw.close();
-                    socketClient.close();
-                    socketserveur.close();
-                    break;
+            
+            Thread envoi = new Thread(new Runnable() {
+                String msg;
+                @Override
+                public void run() {
+                    while(true){
+                        msg=sc.nextLine();
+                        try {
+                            byte[] msgchiffré = chif.chiffrerMsg(msg);
+                        } catch (InvalidKeyException ex) {
+                            Logger.getLogger(ServeurTCP.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (NoSuchAlgorithmException ex) {
+                            Logger.getLogger(ServeurTCP.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (NoSuchPaddingException ex) {
+                            Logger.getLogger(ServeurTCP.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (IllegalBlockSizeException ex) {
+                            Logger.getLogger(ServeurTCP.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (BadPaddingException ex) {
+                            Logger.getLogger(ServeurTCP.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        pw.println(msg);
+                        pw.flush();
+                    }
                 }
-                
-                System.out.println("message recu : "+message);
-                pw.println(message);
-                
-
-            }
-        }
-        catch(Exception e){
+            });
+            envoi.start();
+ 
+            
+            
+            Thread recevoir = new Thread(new Runnable() {
+                String msg;
+                @Override
+                public void run() {
+                    try{
+                        msg = in.readLine();
+                        
+                        while(!msg.equals("bye")){
+                            System.out.println("Client : "+msg);
+                            msg=in.readLine();
+                        }
+                        System.out.println("Client déconnecté");
+                        out.close();
+                        socketClient.close();
+                        socketserveur.close();
+                        } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            });
+            recevoir.start();
+        }catch (IOException e ){
             e.printStackTrace();
         }
-        
-        
     }
-
 }
