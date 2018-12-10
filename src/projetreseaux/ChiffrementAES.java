@@ -5,6 +5,13 @@
  */
 package projetreseaux;
 
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -17,6 +24,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 import static sun.security.krb5.Confounder.bytes;
 /**
  *
@@ -24,33 +32,70 @@ import static sun.security.krb5.Confounder.bytes;
  */
 
 public class ChiffrementAES {
-    String KEY = "JESUISMONCHERAMI";
-    SecretKeySpec specification; 
+    public static SecretKey key;
+    public static Cipher cipher; 
     
-    public ChiffrementAES(){
-        this.specification = new SecretKeySpec(KEY.getBytes(), "AES");
+    
+    
+ 
+    
+    
+    public static SecretKey importKey(String filePath) throws IOException{
+        byte[] byteKey = Files.readAllBytes(Paths.get(filePath));
+        
+        SecretKey importedKey;
+        
+        try (FileInputStream keyIn = new FileInputStream(filePath)) {
+            importedKey = new SecretKeySpec(byteKey, "AES");
+        }
+        
+        return importedKey;
+    }
+    
+    
+    public static void exportKey(SecretKey key, String outputFile) throws Exception{
+        try (FileOutputStream keyOut = new FileOutputStream(outputFile)) {
+            keyOut.write(key.getEncoded());
+        }
+    }
+        
+    
+    public static SecretKey generateKey() throws NoSuchAlgorithmException{       
+          KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+          keyGen.init(256);
+          
+          SecretKey key = keyGen.generateKey();
+          
+          ChiffrementAES.key=key;
+          return key;
     }
     
 
-    public byte[] chiffrerMsg(String s ) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException{
+    public static byte[] chiffrerMsg(String message) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException{
         
-        byte[] bytes = null;
-                
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        byte[] cryptedmsg = cipher.doFinal(message.getBytes());
+        System.err.println("Message crypté = "+message+new String(cryptedmsg));
         
-                    Cipher chiffreur = Cipher.getInstance("AES");
-                    chiffreur.init(Cipher.ENCRYPT_MODE, specification);
-                    bytes = chiffreur.doFinal(s.getBytes());
-        
-        return bytes;
+        return cryptedmsg;
     }
     
-    public String dechiffrerMsg(byte[] b) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException{
-        Cipher dechiffreur = Cipher.getInstance("AES");
-        dechiffreur.init(Cipher.DECRYPT_MODE, specification);
-        String s = new String(dechiffreur.doFinal(b));
+    public static void dechiffrerMsg(DataInputStream in) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, IOException{
+        cipher.init(Cipher.DECRYPT_MODE, key);
+        byte[] cryptedmsg = new byte[in.readInt()];
         
-        return s;
-    }
+        in.readFully(cryptedmsg);
+        
+        byte[] decrypterdmsg = cipher.doFinal(cryptedmsg);
+        System.err.println("Message crypté : "+new String(cryptedmsg)+" => "+"Message decrypé = "+new String(decrypterdmsg));
+   }
     
-    
+    public static void main(String[] args) throws IOException, Exception {
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        
+        ChiffrementAES.exportKey(key,"cle.txt");
+        
+        SecretKey importedKey = ChiffrementAES.importKey("cle.txt");
+      
+  }
 }
