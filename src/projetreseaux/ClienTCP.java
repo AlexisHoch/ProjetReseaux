@@ -48,6 +48,7 @@ public class ClienTCP {
                if(isReading){
                    ChiffrementAES.dechiffrerMsg(clientIn);
                }else{
+                   message = messageInput.readLine();
                    byte[] tab = ChiffrementAES.chiffrerMsg(message);
                    clientOut.writeInt(tab.length);
                    clientOut.write(tab);
